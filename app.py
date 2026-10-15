@@ -9,6 +9,7 @@ import networkx as nx
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+from graph_rag_engine import InsightAIGraphRAG
 
 # ---------------------------------------------------------
 # Page Configuration & Styling
@@ -185,33 +186,38 @@ kg_graph = build_knowledge_graph()
 # ---------------------------------------------------------
 # Sidebar — Dual Mode & Enhancement Controls
 # ---------------------------------------------------------
-st.sidebar.title("🔮 InsightAI v2.0")
-st.sidebar.caption("Challenge 2 Enhancement — Deadline: Sep 28")
+st.sidebar.title("🔮 InsightAI v3.0")
+st.sidebar.caption("Challenge 3: Human–AI Co-Design GraphRAG — Oct 15")
 
 app_mode = st.sidebar.radio(
     "Select User Perspective:",
-    ["🏢 Company Operations Mode (Diagnosis & Auditing)", 
-     "🛍️ Customer-Facing Mode (Pre-Purchase Inquiries & Satisfaction Risk)"],
+    [
+        "🕸️ Challenge 3: Live GraphRAG (Neo4j AuraDB)",
+        "🏢 Company Operations Mode (Diagnosis & Auditing)", 
+        "🛍️ Customer-Facing Mode (Pre-Purchase Inquiries & Satisfaction Risk)"
+    ],
     index=0
 )
 
 st.sidebar.divider()
-st.sidebar.subheader("Instructor Enhancements")
+st.sidebar.subheader("System Architecture")
 st.sidebar.markdown("""
-- 🤖 **Predictive ML Model**: RandomForest vs Simple Heuristic Baseline
-- 🕸️ **Knowledge Graph (KG)**: Entity relational reasoning (Category $\\rightarrow$ Cause $\\rightarrow$ Metric)
-- 🛍️ **Customer-Facing Portal**: Pre-purchase buyer Q&A
-- ⚖️ **Evaluation & Baseline Comparison**: Quantitative benchmark
+- 🕸️ **Live Neo4j GraphRAG**: Multi-hop retrieval on AuraDB
+- 🤝 **Human–AI Co-Design**: Zero-phantom schema & SLA metrics
+- 🤖 **Predictive ML Model**: Random Forest satisfaction classifier
+- 🏢 **Operations Mode**: Audit & root-cause diagnostic
+- 🛍️ **Customer Mode**: Pre-purchase risk simulator
 """)
 
 st.sidebar.divider()
+st.sidebar.caption("Neo4j Aura: `a1085e34.databases.neo4j.io`")
 st.sidebar.caption("GitHub: [InsightAI_Week_2](https://github.com/mahjabi/InsightAI_Week_2)")
 
 # ---------------------------------------------------------
 # Main Header
 # ---------------------------------------------------------
-st.markdown('<div class="main-header">🧠 InsightAI: Human–AI Co-Design System <span class="badge-enhancement">v2.0 Enhanced</span></div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-header">Addressing Challenge 2 Enhancements: Predictive Modeling, Knowledge Graph Reasoning & Dual-Mode Perspective</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-header">🧠 InsightAI: Human–AI Co-Design System <span class="badge-enhancement">v3.0 GraphRAG</span></div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-header">Challenge 3: Grounded GraphRAG with Neo4j AuraDB, Multi-Hop Traversal & Operational Analytics</div>', unsafe_allow_html=True)
 
 # -------------------------------------------------------------------------------------------------
 # PERSPECTIVE 1: COMPANY OPERATIONS MODE (DIAGNOSTIC & AUDIT)
@@ -355,7 +361,7 @@ if "Company Operations" in app_mode:
 # -------------------------------------------------------------------------------------------------
 # PERSPECTIVE 2: CUSTOMER-FACING MODE (BUYER INQUIRIES & PREDICTIVE RISK)
 # -------------------------------------------------------------------------------------------------
-else:
+elif "Customer-Facing" in app_mode:
     st.subheader("🛍️ Customer Pre-Purchase Inquiry & Satisfaction Risk Predictor")
     st.caption("Addressing Professor Feedback: Empowering buyers to inspect delivery risks and ask product questions before purchasing.")
     
@@ -436,7 +442,107 @@ else:
         st.info(f"🗣️ *\"{r['review_comment_message_en']}\"* — Score: {r['review_score']}/5 ★ [Order: `{r['order_id']}`]")
 
 # -------------------------------------------------------------------------------------------------
-# PERSPECTIVE 3: QUANTITATIVE BENCHMARK EVALUATION & BASELINE COMPARISON
+# PERSPECTIVE 3: LIVE GRAPHRAG MODE (CHALLENGE 3 HUMAN-AI CO-DESIGN)
+# -------------------------------------------------------------------------------------------------
+elif "GraphRAG" in app_mode:
+    st.subheader("🕸️ Human–AI Co-Design: Grounded GraphRAG with Neo4j AuraDB")
+    st.caption("CS 5542 Challenge 3: Live knowledge-grounded multi-hop retrieval and operational analytics engine.")
+    
+    # Live Neo4j Status Badge
+    @st.cache_resource
+    def get_graphrag_engine():
+        return InsightAIGraphRAG()
+    
+    rag_engine = get_graphrag_engine()
+    
+    if rag_engine.connected:
+        st.success("🟢 **Live Neo4j AuraDB Connected**: `a1085e34.databases.neo4j.io` | **Schema**: 8 Entity Types, 37 Valid Nodes, 44 Relationships | **Phantom Nodes**: 0")
+    else:
+        st.warning(f"⚠️ **Neo4j AuraDB Offline/Reconnecting**: {getattr(rag_engine, 'connection_error', 'Unknown')}. Operating with local grounded fallback.")
+
+    # Question Selection
+    st.markdown("### ❓ Select or Input a Domain Question")
+    q_mode = st.radio(
+        "Choose an Evaluation Benchmark Question:",
+        [
+            "1️⃣ Basic Retrieval (Single-Hop): Product PROD_1001 specs, seller, and fragile status",
+            "2️⃣ Multi-Hop Reasoning (3 Hops): Why Order ORD_50042 received a 1-star review & root causes",
+            "3️⃣ Data Analytics Question (Multi-Relational): High-delay routes & triggered operational remediations",
+            "4️⃣ Custom Cypher Query (Interactive Exploration)"
+        ]
+    )
+
+    if "1️⃣" in q_mode:
+        q_type = "basic"
+        default_q = "What are the product specifications, category, seller, and fragile status for Product PROD_1001?"
+    elif "2️⃣" in q_mode:
+        q_type = "multihop"
+        default_q = "Why did Order ORD_50042 receive a 1-star negative review, and what logistics route, carrier, and root causes were involved?"
+    elif "3️⃣" in q_mode:
+        q_type = "analytics"
+        default_q = "Which logistics routes experience critical delivery delays and high damage rates, and what operational remediation actions are triggered?"
+    else:
+        q_type = "custom"
+        default_q = "MATCH (r:LogisticsRoute)<-[:TRANSPORTED_VIA]-(o:Order)-[:CONTAINS_ITEM]->(p:Product) RETURN r.route_id, o.order_id, p.name LIMIT 5"
+
+    st.text_area("Question / Query Payload:", value=default_q, height=70, key="gr_q_text")
+
+    col_btn1, col_btn2 = st.columns([1, 4])
+    with col_btn1:
+        run_btn = st.button("🚀 Run GraphRAG", type="primary")
+
+    if run_btn or True:  # Default display of active query
+        with st.spinner("Traversing Neo4j AuraDB Knowledge Graph & Synthesizing Grounded Answer..."):
+            try:
+                res = rag_engine.answer_question(q_type, custom_query=default_q if q_type == "custom" else None)
+            except Exception as e:
+                st.error(f"Execution Error: {e}")
+                res = None
+
+        if res:
+            # Metrics Row
+            m1, m2, m3, m4 = st.columns(4)
+            m1.metric("⚡ Retrieval Latency", f"{res['latency_ms']} ms")
+            m2.metric("📦 Evidence Count", f"{res['record_count']} records")
+            m3.metric("🔗 Traversal Depth", f"{res['hop_count']} Hop{'s' if res['hop_count'] > 1 else ''}")
+            m4.metric("🎯 Groundedness", "100% Backed by KG")
+
+            st.divider()
+
+            col_ans, col_vis = st.columns([1.1, 0.9])
+            with col_ans:
+                st.markdown(res["grounded_answer"])
+            
+            with col_vis:
+                st.markdown("#### 🗺️ Retrieved Subgraph Evidence")
+                if q_type == "multihop":
+                    st.image("/Users/mahjabin/Downloads/InsightAI/docs/images/neo4j_multihop_query_result.png", caption="Live Neo4j Multi-Hop Path: Customer ➔ Order ➔ Route / Product ➔ Review ➔ Cause", use_container_width=True)
+                elif q_type == "analytics":
+                    st.image("/Users/mahjabin/Downloads/InsightAI/docs/images/graphrag_subgraph_visuals.png", caption="Empirical Failure Traversal: Corridor ➔ Incident Rate ➔ Operational Remediation", use_container_width=True)
+                else:
+                    st.image("/Users/mahjabin/Downloads/InsightAI/docs/images/neo4j_knowledge_graph_full.png", caption="Global Neo4j Knowledge Graph (AuraDB)", use_container_width=True)
+
+            # Drawers
+            with st.expander("🔍 Inspect Executed Cypher Query", expanded=False):
+                st.code(res["cypher"], language="cypher")
+
+            with st.expander("📦 Raw Retrieved Knowledge Graph Context (JSON & Table)", expanded=False):
+                st.dataframe(pd.DataFrame(res["records"]), use_container_width=True)
+                st.json(res["records"])
+
+            with st.expander("🤝 Human–AI Co-Design Reflection & Evaluation Card", expanded=False):
+                st.markdown("""
+                ### Human–AI Co-Design Documentation
+                - **Human Design Starting Point:** Designed 8 domain entities (`Customer`, `Order`, `Product`, `Seller`, `LogisticsRoute`, `Review`, `ComplaintCause`, `RemediationAction`) and proposed multi-hop reasoning connecting delays to carrier routes.
+                - **AI Recommendation:** The AI initially recommended using individual variable names across Cypher statements and adding vector embeddings.
+                - **Human Evaluation & Feedback:** Human testing on Neo4j Aura revealed that referencing un-aliased variable names across independent Cypher blocks generated 16–26 unlabeled phantom/blank nodes (`{}`). Furthermore, raw text embedding vectors alone lacked deterministic SLA thresholds.
+                - **Revised Implementation:** Co-designed explicit pattern matching (`MATCH ... MERGE ...`) that eliminated all phantom nodes (resulting in exactly 37 valid nodes, 44 relationships, and 0 phantoms) and added explicit route distance (`distance_km`), carrier SLA (`carrier_sla_days`), and remedy costs (`estimated_cost_usd`).
+                - **Identified Limitation:** Cypher retrieval requires predefined traversal templates or reliable Text-to-Cypher translation; complex ambiguous user questions can fail if entity names are misspelled without fuzzy vector matching.
+                - **Next Step:** Implement a hybrid Dense Vector + Sparse Cypher Retriever using Neo4j GraphRAG Python SDK for fuzzy entity resolution.
+                """)
+
+# -------------------------------------------------------------------------------------------------
+# PERSPECTIVE 4: QUANTITATIVE BENCHMARK EVALUATION & BASELINE COMPARISON
 # -------------------------------------------------------------------------------------------------
 st.divider()
 with st.expander("📊 Challenge 2 Benchmark: ML Predictive Model vs Baseline Heuristic Comparison", expanded=False):
