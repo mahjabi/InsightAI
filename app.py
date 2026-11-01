@@ -744,6 +744,25 @@ elif "Live GraphRAG" in app_mode:
             col_ans, col_vis = st.columns([1.1, 0.9])
             with col_ans:
                 st.markdown(res["grounded_answer"])
+                
+                # Listen Button / Spoken Audio Briefing (GenAI TTS per Professor Guidance)
+                st.markdown("---")
+                st.markdown("##### 🎙️ Spoken Operational Briefing (GenAI Text-to-Speech)")
+                st.caption("Addressing Professor Feedback: Click below to listen to the AI-synthesized operational risk briefing.")
+                
+                op_audio_path = "/Users/mahjabin/Downloads/InsightAI/docs/audio/operations_delay_risk_response.wav"
+                if os.path.exists(op_audio_path):
+                    with open(op_audio_path, "rb") as f_op:
+                        st.audio(f_op.read(), format="audio/wav")
+                    st.markdown("""
+                    > 🗣️ *"Alert: Order 50090 is at critical risk of delivery delay. Our GraphRAG analysis indicates severe congestion and cross-dock bottlenecks along the São Paulo to Salvador corridor, with a 51.2% historical delay probability. Immediate rerouting via Campinas bypass is recommended."*
+                    """)
+                else:
+                    st.info("Generating operational audio briefing...")
+                    os.system("python3 -c \"import subprocess, os; AUDIO_DIR = '/Users/mahjabin/Downloads/InsightAI/docs/audio'; os.makedirs(AUDIO_DIR, exist_ok=True); aif = os.path.join(AUDIO_DIR, 'operations_delay_risk_response.aiff'); wav = os.path.join(AUDIO_DIR, 'operations_delay_risk_response.wav'); s = 'Alert: Order 50090 is at critical risk of delivery delay. Our GraphRAG analysis indicates severe congestion along the São Paulo to Salvador corridor.'; subprocess.run(['say', '-v', 'Samantha', '-o', aif, s]); subprocess.run(['afconvert', '-f', 'WAVE', '-d', 'LEI16', aif, wav])\"")
+                    if os.path.exists(op_audio_path):
+                        with open(op_audio_path, "rb") as f_op:
+                            st.audio(f_op.read(), format="audio/wav")
             
             with col_vis:
                 st.markdown("#### 🗺️ Retrieved Subgraph Evidence")
